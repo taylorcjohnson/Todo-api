@@ -56,7 +56,6 @@ app.post('/todos', function (req, res) {
 
 // DELETE /todos/:id
 app.delete('/todos/:id', function (req, res) {
-    var body = _.pick(req.body, 'description', 'completed');
     var todoId = parseInt(req.params.id, 10);
     var matchedTodo = _.findWhere(todos, {id: todoId});
     
@@ -67,6 +66,37 @@ app.delete('/todos/:id', function (req, res) {
         res.json(matchedTodo);
     }
 
+});
+
+// PUT /todos/:id
+app.put('/todos/:id', function (req, res) {
+    var todoId = parseInt(req.params.id, 10);
+    var matchedTodo = _.findWhere(todos, {id: todoId});
+    var body = _.pick(req.body, 'description', 'completed');
+    var validAttributes = {};
+    
+    // If there was not a valid id, return 404
+    if (!matchedTodo) {
+        return res.status(404).send();
+    }
+    
+    // Update valid completed property
+    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+        validAttributes.completed = body.completed;  
+    } else if (body.hasOwnProperty('completed')) {
+        return res.status(400).send();
+    }
+    
+    // Update valid description property
+    if (body.hasOwnProperty('description') && !_.isString(body.description) && body.description.trim().length > 0) {
+        validAttributes.completed = body.completed;  
+    } else if (body.hasOwnProperty('description')) {
+        return res.status(400).send();
+    }
+    
+    // Replace valid property in data, send back user provided object
+    _.extend(matchedTodo, validAttributes);
+    res.json(matchedTodo);
 });
 
 app.listen(PORT, function () {
